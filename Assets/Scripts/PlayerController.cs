@@ -41,37 +41,41 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        // 1. Získanie smeru a jeho normalizácia (zabraňuje rýchlejšiemu pohybu po uhlopriečke)
         Vector3 moveDir = new Vector3(input.x, 0f, input.y).normalized;
 
-        // Gravity
+        // 2. Gravitácia (v Unity 6 funguje CharacterController rovnako)
         if (controller.isGrounded)
         {
             if (verticalVelocity < 0)
-                verticalVelocity = -2f;
+                verticalVelocity = -2f; // Drží postavu pevne na zemi
         }
         else
         {
             verticalVelocity -= gravity * Time.deltaTime;
         }
 
+        // 3. Výpočet výsledného pohybu
         Vector3 move = moveDir * moveSpeed;
         move.y = verticalVelocity;
 
         controller.Move(move * Time.deltaTime);
 
-        // Rotation
+        // 4. PREPOJENIE S BLEND TREE V UNITY 6
+        if (animator != null)
+        {
+            // Posielame surové hodnoty z Input Systemu priamo do parametrov Blend Tree
+            animator.SetFloat("MoveX", input.x);
+            animator.SetFloat("MoveY", input.y);
+        }
+
+        // 5. Otáčanie postavy v smere pohybu
+        // POZNÁMKA: Ak robíš hru, kde postava môže cúvať čelom ku kamere (napr. strieľačka),
+        // toto otáčanie budeš musieť neskôr upraviť/odstrániť. Ak ide o adventúru, nechaj to takto.
         if (moveDir.magnitude > 0.1f)
         {
             Quaternion targetRot = Quaternion.LookRotation(moveDir);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, rotationSpeed * Time.deltaTime);
-
-            if (animator != null)
-                animator.SetBool("Walk", true);
-        }
-        else
-        {
-            if (animator != null)
-                animator.SetBool("Walk", false);
         }
     }
 }
