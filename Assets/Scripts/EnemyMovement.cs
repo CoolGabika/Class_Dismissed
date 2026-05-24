@@ -11,12 +11,12 @@ public class EnemyMovement : MonoBehaviour
     private float _rotationSpeed;
 
     private Rigidbody _rigidbody;
-    private PlayerAwarenessController _playerAwarenessController;
+    private EnemyAI _playerAwarenessController;
     private Vector2 _targetDirection;
     private void Awake()
     {
         _rigidbody = GetComponent<Rigidbody>();
-        _playerAwarenessController = GetComponent<PlayerAwarenessController>();
+        _playerAwarenessController = GetComponent<EnemyAI>();
     }
 
     private void FixedUpdate()
