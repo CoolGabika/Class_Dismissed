@@ -1,18 +1,17 @@
 using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
 
 public class EnemyMovement : MonoBehaviour
 {
     [SerializeField]
-    private float _speed;
+    private float _speed = 3.5f;
 
     [SerializeField]
-    private float _rotationSpeed;
+    private float _rotationSpeed = 120f;
 
     private Rigidbody _rigidbody;
     private EnemyAI _playerAwarenessController;
-    private Vector2 _targetDirection;
+    private Vector3 _targetDirection; // ZMENA: V 3D svete používame Vector3!
+
     private void Awake()
     {
         _rigidbody = GetComponent<Rigidbody>();
@@ -23,56 +22,52 @@ public class EnemyMovement : MonoBehaviour
     {
         UpdateTargetDirection(); // 1. Zistíme, kam máme ísť
         RotateTowardsTarget();   // 2. Otočíme sa tam
-        SetVelocity();           // 3. Dodáme silu/rýchlosť na pohyb
+        SetVelocity();           // 3. Pohneme sa tam
     }
 
-    private void UpdateTargetDirection()
+   private void UpdateTargetDirection()
     {
-        // Ak skript PlayerAwarenessController hlási, že vidí hráča...
-        if (_playerAwarenessController.AwareOfPlayer)
+    // ÚPРАVА: Úplne ignorujeme, či o nás EnemyAI vie, a hľadáme hráča natvrdo cez celú mapu!
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
         {
-            // ...nastavíme smer priamo na hráča
-            _targetDirection = _playerAwarenessController.DirectionToPlayer;
+            _targetDirection = (player.transform.position - transform.position).normalized;
+            _targetDirection.y = 0; // Držíme ich na zemi
         }
         else
         {
-            // ...ak o ňom nevie, smer je nulový (nepriateľ nikam nechce ísť)
-            _targetDirection = Vector2.zero;
+            _targetDirection = Vector3.zero;
         }
     }
 
     private void RotateTowardsTarget()
     {
-        // Ak stojíme na mieste (smer je nula), neotáčame sa a ukončíme funkciu
-        if (_targetDirection == Vector2.zero)
+        if (_targetDirection == Vector3.zero)
         {
             return;
         }
 
-        // Vytvoríme cieľovú rotáciu pre 2D priestor. 
-        // transform.forward udržiava objekt v správnej osi a _targetDirection ho natáča za hráčom
-        Quaternion targetRotation = Quaternion.LookRotation(transform.forward, _targetDirection);
+        // ZMENA: Správna 3D rotácia smerom k cieľu
+        Quaternion targetRotation = Quaternion.LookRotation(_targetDirection);
+        
+        // Plynulé otáčanie v 3D
+        Quaternion rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _rotationSpeed * Time.fixedDeltaTime);
 
-        // Plynule posunieme aktuálnu rotáciu smerom k cieľovej rotácii na základe rýchlosti otáčania
-        // Použitie Time.deltaTime (resp. Time.fixedDeltaTime vo FixedUpdate) zabezpečí plynulosť bez ohľadu na FPS
-        Quaternion rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _rotationSpeed * Time.deltaTime);
-
-        // Aplikujeme novú rotáciu na Rigidbody
         _rigidbody.MoveRotation(rotation);
     }
 
     private void SetVelocity()
     {
-        // Ak nemáme žiadny cieľ, zastavíme fyzikálny pohyb
-        if (_targetDirection == Vector2.zero)
+        if (_targetDirection == Vector3.zero)
         {
-            _rigidbody.linearVelocity = Vector2.zero;
+            // Zastavenie v 3D
+            _rigidbody.linearVelocity = Vector3.zero;
         }
         else
         {
-            // Ak máme cieľ, pohneme nepriateľom smerom "hore" (v 2D hrách je transform.up smer, kam sa objekt díva)
-            // a vynásobíme to nastavenou rýchlosťou
-            _rigidbody.linearVelocity = transform.up * _speed;
+            // ZMENA: V 3D hrách je smer dopredu transform.forward (nie transform.up)!
+            // Tlačíme učiteľa v smere, kam sa reálne pozerá
+            _rigidbody.linearVelocity = transform.forward * _speed;
         }
     }
 }

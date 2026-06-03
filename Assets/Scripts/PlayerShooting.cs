@@ -27,33 +27,40 @@ public class PlayerShooting : MonoBehaviour
 
     void Shoot()
     {
-        // NOVÝ ZÁPIS: Získa pozíciu myši na obrazovke
-        Vector2 mousePosition = Mouse.current.position.ReadValue();
-        Ray ray = _mainCamera.ScreenPointToRay(mousePosition);
-        RaycastHit hit;
-        Vector3 targetPoint;
+    // 1. Získame pozíciu myši (Nový Input System)
+    Vector2 mousePosition = Mouse.current.position.ReadValue();
+    Ray ray = _mainCamera.ScreenPointToRay(mousePosition);
+    
+    // 2. Vytvoríme matematickú rovinu vo výške hrudníka hráča (Ziak)
+    Plane playerPlane = new Plane(Vector3.up, new Vector3(0, transform.position.y + 1.2f, 0));
+    float rayDistance;
+    Vector3 targetPoint = transform.position + transform.forward * 10f; // Záložný smer, ak by lúč minul
 
-        if (Physics.Raycast(ray, out hit))
-        {
-            targetPoint = hit.point;
-        }
-        else
-        {
-            targetPoint = ray.GetPoint(100f);
-        }
+    // 3. Zistíme, kde presne lúč z myši pretne túto rovinu
+    if (playerPlane.Raycast(ray, out rayDistance))
+    {
+        targetPoint = ray.GetPoint(rayDistance);
+    }
 
-        Vector3 direction = (targetPoint - transform.position).normalized;
-        direction.y = 0; 
+    // 4. Vypočítame smer od Žiaka k bodu kliknutia
+    Vector3 direction = (targetPoint - transform.position).normalized;
+    direction.y = 0; // Chceme, aby vankúš letel rovno, nie hore/dole
 
-        Vector3 spawnPos = transform.position + transform.forward * 0.8f + Vector3.up * 1.2f;
-        GameObject vankus = Instantiate(vankusPrefab, spawnPos, Quaternion.LookRotation(direction));
-        
-        Rigidbody rb = vankus.GetComponent<Rigidbody>();
-        if (rb != null)
-        {
-            rb.linearVelocity = direction * shootingForce; // Už opravené na linearVelocity!
-        }
+    // 5. Pozícia zrodu (2 metre pred hráčom, 1.2 metra vysoko)
+    Vector3 spawnPos = transform.position + transform.forward * 1.5f + Vector3.up * 1.2f;
+    
+    // 6. Vytvorenie vankúša otočeného v smere letu
+    GameObject vankus = Instantiate(vankusPrefab, spawnPos, Quaternion.LookRotation(direction));
+    
+    // 7. Vystrelenie vankúša
+    Rigidbody rb = vankus.GetComponent<Rigidbody>();
+    if (rb != null)
+    {
+        rb.isKinematic = false;
+        rb.useGravity = false;
+        rb.linearVelocity = direction * shootingForce; 
+    }
 
-        Destroy(vankus, 3f);
+    Destroy(vankus, 3f);
     }
 }

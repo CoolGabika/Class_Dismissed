@@ -1,30 +1,35 @@
 using UnityEngine;
-using UnityEngine.AI;
 
 public class EnemyHealth : MonoBehaviour
 {
-    // Funkcia, ktorú zavolá letiaci vankúš pri náraze
+    public GameObject efektCastic; // Sem v Unity pretiahneme náš modrý Prefab partiklov
+    private bool _isDead = false;
+
     public void TakeDamage()
     {
+        if (_isDead) return;
         Die();
     }
 
     void Die()
     {
-        Debug.Log(name + " dostal vankúšom a bol vyradený!");
+        _isDead = true;
+        Debug.Log(name + " bol vyradený a vymazaný!");
 
-        // Vypne NavMeshAgenta, aby sa učiteľ po smrti hneď prestal hýbať a prenasledovať ťa
-        NavMeshAgent agent = GetComponent<NavMeshAgent>();
-        if (agent != null) agent.isStopped = true;
+        // 1. Pripočítame kill do GameManageru
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.AddKill();
+        }
 
-        // Vypne skript EnemyAI (tvoj pohybový kód učiteľa), aby sa nehádal s vypnutým agentom
-        EnemyAI ai = GetComponent<EnemyAI>();
-        if (ai != null) ai.enabled = false;
+        // 2. Vytvoríme efekt partiklov na mieste, kde stál učiteľ
+        if (efektCastic != null)
+        {
+            GameObject particleInstance = Instantiate(efektCastic, transform.position + Vector3.up * 1f, Quaternion.identity);
+            Destroy(particleInstance, 1f); // Vymaže samotné partikle z pamäte po 1 sekunde
+        }
 
-        // EFEKT SMRTI: Zrotuje celého učiteľa o -90 stupňov na X osi (odpadne dozadu na chrbát)
-        transform.rotation = Quaternion.Euler(-90, transform.rotation.eulerAngles.y, 0);
-
-        // Vymaže telo učiteľa zo scény po 4 sekundách, aby nezavadzalo na zemi
-        Destroy(gameObject, 4f);
+        // 3. Okamžite vymažeme učiteľa zo scény, aby nekrúžil a nebugoval sa
+        Destroy(gameObject);
     }
 }

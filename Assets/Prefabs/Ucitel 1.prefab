@@ -448,7 +448,7 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -481,7 +481,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
   _speed: 20
-  _rotationSpeed: 10
+  _rotationSpeed: 150
 --- !u!114 &6609333621977177434
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -494,3 +494,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 135bc72f7dc9fff49831f687b6bdd930, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
+  efektCastic: {fileID: 6217350549373200485, guid: 82aac28bde29ead4a8498fd0867768f6, type: 3}

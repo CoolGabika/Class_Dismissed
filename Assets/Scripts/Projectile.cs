@@ -2,20 +2,28 @@ using UnityEngine;
 
 public class Projectile : MonoBehaviour
 {
-    // Táto funkcia sa spustí sama, keďže sme na kolidéri zaškrtli "Is Trigger"
+    private bool _hasHit = false; // Poistka proti hromadnému zásahu
+
     private void OnTriggerEnter(Collider other)
     {
-        // Ak vankúš narazí do samotného Hráča (Žiaka), ignoruje to, aby neublížil sám sebe
         if (other.CompareTag("Player")) return;
+        
+        // Ak už vankúš niekoho trafil, ignoruje ďalšie kolízie
+        if (_hasHit) return;
 
-        // Skontroluje, či objekt, do ktorého vankúš narazil, má na sebe skript EnemyHealth (učiteľa)
         EnemyHealth enemyHealth = other.GetComponent<EnemyHealth>();
         if (enemyHealth != null)
         {
-            enemyHealth.TakeDamage(); // Spustí funkciu pre poškodenie/smrť učiteľa
-        }
+            _hasHit = true; // Označíme, že vankúš už trafil cieľ
 
-        // Vankúš sa po náraze do hocičoho (učiteľ, stena) okamžite zničí a zmizne
-        Destroy(gameObject);
+            // Vypneme kolíder vankúša, aby už fyzicky neexistoval pre ostatných
+            Collider myCollider = GetComponent<Collider>();
+            if (myCollider != null) myCollider.enabled = false;
+
+            enemyHealth.TakeDamage();
+            
+            // Okamžite zničíme vankúš
+            Destroy(gameObject);
+        }
     }
 }
